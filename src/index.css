@@ -1,5 +1,10 @@
 @import "tailwindcss";
+/* Global Styles */
 
+.react-datepicker-wrapper,
+.react-datepicker__input-container input {
+  width: 100% !important;
+}
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
