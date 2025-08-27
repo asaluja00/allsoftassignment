@@ -1,4 +1,6 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const Login: React.FC = () => {
   const [phone, setPhone] = useState("");
@@ -6,6 +8,8 @@ const Login: React.FC = () => {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const navigate = useNavigate();
+
 
   const handleGetOtp = async () => {
     if (!/^\d{10}$/.test(phone)) {
@@ -58,8 +62,9 @@ const Login: React.FC = () => {
       const data = await res.json();
       console.log(data.data);
       if (res.ok && data.data.token) {
+        // Saved the token to local storage and navigae to dashboard
         localStorage.setItem("token", data.data.token);
-        alert("Login successful!");
+        navigate("/home");
       } else {
         setError(data.message || "Invalid OTP");
       }
