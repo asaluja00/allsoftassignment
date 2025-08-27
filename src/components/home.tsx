@@ -93,26 +93,36 @@ const FileUpload: React.FC = () => {
       setError("Please fill all required fields.");
       return;
     }
-    const data = {
-        document_date: date.toISOString(),
-        major_head: majorHead,
-        minor_head: minorHead,
-        tags: tags, 
-        document_remarks: remarks,
-        user_id: "anmol" 
-};
+
+    // Build tags as array of objects
+    const tagsArray = tags.map((tag) => ({ tag_name: tag }));
+
+    // Build the data object as per your Postman payload
+    const dataObj = {
+      major_head: majorHead,
+      minor_head: minorHead,
+      document_date: date.toLocaleDateString("en-GB").replace(/\//g, "-"), // "12-02-2024" format
+      document_remarks: remarks,
+      tags: tagsArray,
+      user_id: "molu", // Replace with dynamic user if needed
+    };
 
     const formData = new FormData();
-    formData.append("data", JSON.stringify(data));
     formData.append("file", file);
+    formData.append("data", JSON.stringify(dataObj));
+
+    // Debug: Log the payload
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
 
     try {
-      const res = await fetch("https://apis.allsoft.co/api/documentManagement/uploadDocument", {
+      const res = await fetch("https://apis.allsoft.co/api/documentManagement/saveDocumentEntry", {
         method: "POST",
-         headers: {
-              "Content-Type": "application/json",
-              ...(token ? { "token": token } : {}),
-            },
+        headers: {
+          // Do NOT set Content-Type for FormData, browser will set it
+          token: token || "",
+        },
         body: formData,
       });
       const data = await res.json();
@@ -212,7 +222,7 @@ const FileUpload: React.FC = () => {
               />
               <button
                 onClick={() => handleAddTag()}
-                className="bg-indigo-600 text-black px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition"
                 type="button"
               >
                 Add
@@ -220,7 +230,7 @@ const FileUpload: React.FC = () => {
             </div>
             {showSuggestions && tagSuggestions.length > 0 && (
               <ul className="absolute z-10 left-0 right-0 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto shadow">
-                {tagSuggestions.map((suggestion, idx) => (
+                {tagSuggestions.map((suggestion) => (
                   <li
                     key={suggestion.id}
                     className="px-4 py-2 cursor-pointer hover:bg-indigo-100 text-black"
