@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 @app.route("/hello", methods=["GET"])
 def hello():
     logger.info("Hello API was called")
+    logger.error("Error Calling api")
     return jsonify({"message": "Hello from Flask"})
 
 if __name__ == "__main__":
