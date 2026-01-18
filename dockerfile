@@ -1,8 +1,14 @@
-# ---------- Build React ----------
-FROM node:18-alpine AS build
+FROM python:3.11-slim
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
-RUN npm run build
+
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
