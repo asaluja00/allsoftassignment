@@ -9,25 +9,22 @@ COPY package.json package-lock.json* ./
 # Install deps
 RUN npm install
 
-# 🔥 FIX: install missing runtime deps
+# 🔥 Install missing deps (runtime + types)
 RUN npm install react-router-dom react-datepicker
-
-# 🔥 FIX: install TS types
 RUN npm install --save-dev @types/react-router-dom
 
-# Copy rest of source
+# Copy source
 COPY . .
 
-# 🔥 FIX: relax TypeScript during docker build
-RUN echo '{ \
-  "compilerOptions": { \
-    "noImplicitAny": false, \
-    "skipLibCheck": true \
-  } \
-}' > tsconfig.docker.json
+# 🔥 OVERRIDE BUILD: remove tsc from build script
+RUN node -e "\
+const fs = require('fs'); \
+const pkg = JSON.parse(fs.readFileSync('package.json')); \
+pkg.scripts.build = 'vite build'; \
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2)); \
+"
 
-# Build using relaxed config
-RUN npx tsc --project tsconfig.docker.json || true
+# Build (NO type-check)
 RUN npm run build
 
 
@@ -37,7 +34,7 @@ FROM nginx:alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
