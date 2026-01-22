@@ -1,14 +1,29 @@
-FROM python:3.11-slim
+# ---------- Stage 1: Build ----------
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm install
 
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Copy source and build
 COPY . .
+RUN npm run build
 
-ENV PORT=8080
-EXPOSE 8080
 
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
+# ---------- Stage 2: Serve ----------
+FROM nginx:alpine
+
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy build output from Stage 1
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
